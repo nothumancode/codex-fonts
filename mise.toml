@@ -1,0 +1,41 @@
+min_version = "2026.8.8"
+
+[settings]
+lockfile = true
+
+[tools]
+python = "3.13.15"
+uv = "0.12.7"
+
+[env]
+UV_PROJECT_ENVIRONMENT = ".venv"
+SOURCE_DATE_EPOCH = "1787875200"
+
+[tasks.install]
+description = "Install the locked local font-production environment"
+run = "uv sync --frozen"
+
+[tasks.build]
+description = "Build twelve readable Nerd Font faces and webfonts"
+depends = ["install"]
+run = "uv run python -m codex_fonts.build"
+
+[tasks.specimen]
+description = "Regenerate the browser specimen"
+depends = ["build"]
+run = "uv run python -m codex_fonts.specimen"
+
+[tasks.test]
+description = "Run readability, shaping, Nerd glyph, and monospace tests"
+depends = ["build"]
+run = "uv run pytest -q"
+
+[tasks.qa]
+description = "Run FontBakery's universal profile"
+depends = ["build"]
+run = "uv run python -m codex_fonts.qa"
+
+[tasks.check]
+description = "Build, test, and run production font QA"
+depends = ["test", "qa", "specimen"]
+

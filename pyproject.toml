@@ -1,0 +1,29 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project]
+name = "codex-inspired-fonts"
+version = "2.0.0"
+description = "Readable Codex Sans, Serif, and Mono Nerd Font derivatives"
+requires-python = ">=3.13,<3.14"
+dependencies = [
+  "fontbakery>=1.1,<2",
+  "fontmake>=3.11,<4",
+  "fonttools[lxml,unicode,woff]>=4.59,<5",
+  "glyphsets>=1.1,<2",
+  "shaperglot>=1,<2",
+  "skia-pathops>=0.8,<1",
+  "ufoLib2>=0.18,<1",
+  "uharfbuzz>=0.52,<1",
+]
+
+[dependency-groups]
+dev = ["pytest>=8.4,<9"]
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/codex_fonts"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+
