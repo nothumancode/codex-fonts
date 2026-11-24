@@ -6,7 +6,7 @@
   const motion = matchMedia("(prefers-reduced-motion: reduce)");
   const face = '700 240px "Codex Mono"';
   const names = { a: "lowercase a", g: "lowercase g", 0: "zero" };
-  const colors = ["#754b32", "#a16138", "#c77b47", "#df8951", "#ef8646", "#ff9954", "#ffb370", "#ffd7a0"];
+  const colors = ["#555", "#6d6d6d", "#858585", "#9d9d9d", "#b7b7b7", "#d2d2d2", "#e9e9e9", "#fff"];
   let glyph = "a";
   let width, height, pitch, line, cells, frame;
 
