@@ -1,0 +1,125 @@
+<!doctype html>
+<meta charset="utf-8">
+<title>Glyph signal motion check</title>
+<pre id="result">Running glyph signal checks…</pre>
+<iframe title="Specimen under test" width="1000" height="800"></iframe>
+<script type="module">
+  function installClock() {
+    let now = 0, id = 0, peak = 0;
+    const pending = new Map();
+    performance.now = () => now;
+    window.requestAnimationFrame = callback => {
+      pending.set(++id, callback);
+      peak = Math.max(peak, pending.size);
+      return id;
+    };
+    window.cancelAnimationFrame = token => pending.delete(token);
+    window.clock = {
+      elapse(ms) { now += ms; },
+      step(ms = 0) {
+        now += ms;
+        const callbacks = [...pending.values()];
+        pending.clear();
+        for (const callback of callbacks) callback(now);
+      },
+      get pending() { return pending.size; },
+      get peak() { return peak; },
+    };
+  }
+
+  function check(condition, message) {
+    if (!condition) throw new Error(message);
+  }
+
+  async function run() {
+    const base = new URL("../build/showcase/", location.href);
+    const response = await fetch(base);
+    check(response.ok, "Stage build/showcase/ before running this check");
+    const iframe = document.querySelector("iframe");
+    const loaded = new Promise(resolve => iframe.onload = resolve);
+    iframe.srcdoc = (await response.text()).replace("<head>", '<head><base href="' + base + '">' +
+      "<script>(" + installClock.toString() + ")()<\/script>");
+    await loaded;
+    const doc = iframe.contentDocument, clock = iframe.contentWindow.clock;
+    const choices = doc.querySelector(".glyph-choices");
+    if (choices.hidden) {
+      await new Promise((resolve, reject) => {
+        const timer = setTimeout(() => reject(new Error("Signal did not mount with the public font")), 5000);
+        const observer = new MutationObserver(() => {
+          if (choices.hidden) return;
+          clearTimeout(timer);
+          observer.disconnect();
+          resolve();
+        });
+        observer.observe(choices, { attributes: true });
+      });
+    }
+    const canvas = doc.querySelector(".chamber canvas");
+    const pixels = () => canvas.toDataURL();
+    const choose = letter => choices.querySelector('[data-glyph="' + letter + '"]').click();
+    const selected = () => choices.querySelector('[aria-pressed="true"]').dataset.glyph;
+    const replay = () => doc.querySelector(".replay").click();
+    const expected = {};
+    for (const letter of ["a", "g", "0"]) {
+      choose(letter);
+      replay();
+      clock.step(1700);
+      expected[letter] = pixels();
+    }
+    check(new Set(Object.values(expected)).size === 3, "The three finished outlines must differ");
+    if (iframe.contentWindow.matchMedia("(prefers-reduced-motion: reduce)").matches) {
+      for (const letter of ["g", "a", "0"]) {
+        choose(letter);
+        check(pixels() === expected[letter] && clock.peak === 0, "Reduced motion must settle synchronously");
+      }
+      return "Reduced motion: three immediate choices, no animation frames";
+    }
+    function interrupt(letters) {
+      const before = pixels();
+      for (const letter of letters) {
+        choose(letter);
+        check(selected() === letter && pixels() === before, "Selection cleared or changed the painted canvas");
+      }
+      clock.step();
+      check(pixels() === before, "The first repaint at the same timestamp must be pixel-identical");
+      clock.step(120);
+      const moving = pixels();
+      check(moving !== before && !Object.values(expected).includes(moving), "The next frames must be mid-morph");
+    }
+    choose("a");
+    clock.step(1700);
+    check(pixels() === expected.a, "Expected the settled a before selecting g");
+    interrupt("g");
+    for (const letter of "g0g") choose(letter);
+    clock.step(730);
+    check(pixels() === expected.g && clock.pending === 0, "Same-frame input restarted the flight to g");
+    choose("a");
+    replay();
+    const seed = pixels();
+    clock.step(850);
+    check(pixels() !== seed && pixels() !== expected.a, "The entrance must be partway to a");
+    interrupt("g");
+    interrupt("0");
+    interrupt("ag0a");
+    clock.step(1700);
+    check(selected() === "a" && pixels() === expected.a, "Rapid reversal missed the last choice");
+    check(clock.pending === 0 && clock.peak === 1, "There must be one active frame and none at rest");
+    choose("a");
+    check(clock.pending === 0 && pixels() === expected.a, "Reselecting a started another signal");
+    replay();
+    clock.step(850);
+    const lastPaint = pixels();
+    clock.elapse(16);
+    choose("g");
+    check(pixels() === lastPaint, "An input between frames must leave the last paint intact");
+    clock.step();
+    check(pixels() !== lastPaint, "A late input must not stall marks that were already moving");
+    clock.step(850);
+    check(pixels() === expected.g && clock.pending === 0, "The interrupted entrance must settle on g");
+    return "Settled switch, interrupted entrance, rapid reversal, exact final outlines and single frame owner";
+  }
+
+  const result = document.querySelector("#result");
+  run().then(summary => result.textContent = "PASS — " + summary)
+    .catch(error => { result.textContent = "FAIL — " + error.message; throw error; });
+</script>
