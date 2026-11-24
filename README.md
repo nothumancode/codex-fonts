@@ -1,5 +1,7 @@
 # Codex Readable Nerd Fonts
 
+[Public Codex type specimen — build and run the interactive showcase](site/README.md)
+
 A practical three-family type system for ordinary interfaces, long-form text,
 and terminals:
 

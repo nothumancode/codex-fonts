@@ -1,0 +1,143 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#141715">
+  <meta name="description" content="Three Codex typefaces for the screen. Examine a letter, set a proof, and take Mono, Sans and Serif to your own desk.">
+  <title>Codex — The shape of code</title>
+  <link rel="icon" href="mark.svg" type="image/svg+xml">
+  <link rel="preload" href="fonts/CodexMono-Bold.woff2" as="font" type="font/woff2" crossorigin>
+  <link rel="stylesheet" href="fonts.css">
+  <link rel="stylesheet" href="screen.css">
+  <script src="controls.js" defer></script>
+  <script src="matrix.js" defer></script>
+</head>
+<body id="top">
+  <a class="skip" href="#main">Skip to specimen</a>
+  <svg class="symbols" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+    <symbol id="arrow" viewBox="0 0 20 20"><path d="M3 10h13m-6-6 6 6-6 6"/></symbol>
+    <symbol id="southeast" viewBox="0 0 20 20"><path d="m4 4 11 11M6 15h9V6"/></symbol>
+    <symbol id="download" viewBox="0 0 20 20"><path d="M10 2v10m-4-4 4 4 4-4M4 14v3h12v-3"/></symbol>
+    <symbol id="replay" viewBox="0 0 20 20"><path d="M3 4v5h5M3 9a7 7 0 1 1 1 6"/></symbol>
+  </svg>
+  <header class="masthead">
+    <div class="wrap masthead-inner">
+      <a class="brand" href="#top" aria-label="Codex, back to top"><img src="mark.svg" width="32" height="32" alt=""><span>Codex</span></a>
+      <span class="masthead-note">Type system</span>
+      <nav aria-label="Main navigation">
+        <a class="nav-text" href="#specimens">Specimens</a>
+        <a class="nav-text" href="#tester">Type tester</a>
+        <a class="nav-get" href="#install">Get the fonts <svg class="icon" aria-hidden="true"><use href="#download"/></svg></a>
+      </nav>
+    </div>
+  </header>
+  <main id="main" tabindex="-1">
+    <section class="wrap hero" aria-labelledby="hero-title">
+      <div class="hero-copy">
+        <p class="eyebrow"><span class="pulse-mark" aria-hidden="true"></span> Interactive type specimen</p>
+        <h1 id="hero-title">The shape<br> of <em>code<span>.</span></em></h1>
+        <p class="dek">Three typefaces for life on screen. A Mono for the terminal, a Sans for the interface, and a Serif for the hours spent reading.</p>
+        <a class="action" href="#tester">Try the type <svg class="icon" aria-hidden="true"><use href="#arrow"/></svg></a>
+      </div>
+      <figure class="instrument">
+        <figcaption class="instrument-head"><span><b>Fig. 01</b><i>/</i> Glyph signal</span><span>Codex Mono · Bold</span></figcaption>
+        <div class="chamber" role="img" aria-label="An enlarged lowercase a in Codex Mono Bold.">
+          <div class="axis axis-t" aria-hidden="true"></div>
+          <div class="axis axis-l" aria-hidden="true"></div>
+          <span class="cross c1" aria-hidden="true"></span><span class="cross c2" aria-hidden="true"></span>
+          <span class="cross c3" aria-hidden="true"></span><span class="cross c4" aria-hidden="true"></span>
+          <span class="codepoint" aria-hidden="true">U+0061</span>
+          <span class="glyph-fallback" aria-hidden="true">a</span>
+          <canvas aria-hidden="true"></canvas>
+        </div>
+        <div class="instrument-controls">
+          <span class="reading-size"><b>a</b> / 16 px</span>
+          <div class="glyph-choices" role="group" aria-label="Signal glyph" hidden>
+            <button type="button" aria-label="Show lowercase a" aria-pressed="true" data-glyph="a">a</button>
+            <button type="button" aria-label="Show lowercase g" aria-pressed="false" data-glyph="g">g</button>
+            <button type="button" aria-label="Show digit 0" aria-pressed="false" data-glyph="0">0</button>
+          </div>
+          <button class="replay" type="button" hidden><svg class="icon" aria-hidden="true"><use href="#replay"/></svg> Replay signal</button>
+        </div>
+      </figure>
+    </section>
+    <nav class="wrap directory" id="specimens" aria-label="Specimen index">
+      <a href="#mono"><span class="index-no">01 /</span> <span><span class="family-name mono">Mono</span> <span class="directory-note">Terminal</span></span><svg class="icon" aria-hidden="true"><use href="#southeast"/></svg></a>
+      <a href="#tester"><span class="index-no">02 /</span> <span><span class="family-name sans">Sans</span> <span class="directory-note">Interface</span></span><svg class="icon" aria-hidden="true"><use href="#southeast"/></svg></a>
+      <a href="#serif"><span class="index-no">03 /</span> <span><span class="family-name serif">Serif</span> <span class="directory-note">Reading</span></span><svg class="icon" aria-hidden="true"><use href="#southeast"/></svg></a>
+    </nav>
+    <section id="mono" class="wrap section split mono-section" aria-labelledby="mono-title">
+      <div class="section-intro">
+        <p class="eyebrow"><span>01 /</span> Codex Mono</p>
+        <h2 id="mono-title">One cell<br> at a time<span>.</span></h2>
+        <p>The test is in the small things. Pick out a zero, follow a column, read the space between an <i>r</i> and an <i>n</i>.</p>
+        <a class="underlink" href="cells.txt" download>Save the terminal sample <svg class="icon" aria-hidden="true"><use href="#download"/></svg></a>
+      </div>
+      <div class="terminal">
+        <div class="terminal-head"><span><span class="terminal-mark" aria-hidden="true">&gt;_</span> codex / shell</span><span>16 px</span></div>
+        <pre aria-label="Terminal sample in Codex Mono"><span class="path">~/type</span> $ cat cells.txt
+
+<span class="dim">  01       02       03</span>
+  0O oO    1Il|     rn m
+  5S 2Z    8B 6G    vv w
+
+  cr  ea  create  recreate
+  ┌──────┬─────────────┐
+  │ 0x01 │ a-b  a+b  = │
+  └──────┴─────────────┘
+
+<span class="path">~/type</span> $ <span class="cursor" aria-hidden="true"></span></pre>
+      </div>
+    </section>
+    <section id="tester" class="desk" aria-labelledby="desk-title">
+      <div class="wrap section">
+        <div class="section-heading">
+          <div><p class="eyebrow"><span>02 /</span> Codex Sans</p><h2 id="desk-title">The type desk<span>.</span></h2></div>
+          <p>These controls are set in Codex Sans. Put any of the twelve faces on the proof below and type a line of your own.</p>
+        </div>
+        <div class="workbench">
+          <div class="settings" hidden>
+            <div><label for="family">Family</label><select id="family"><option value="mono">Codex Mono</option><option value="sans">Codex Sans</option><option value="serif">Codex Serif</option></select></div>
+            <div><label for="style">Style</label><select id="style"><option value="Regular">Regular</option><option value="Italic">Italic</option><option value="Bold">Bold</option><option value="BoldItalic">Bold Italic</option></select></div>
+            <div class="size-control"><label for="size">Size</label><output for="size" id="size-value">32 px</output><input id="size" type="range" min="12" max="72" value="32" aria-valuetext="32 pixels"></div>
+          </div>
+          <div class="proof">
+            <label for="sample" class="micro">Editable proof</label>
+            <textarea id="sample" aria-describedby="proof-name" rows="3" spellcheck="false" autocomplete="off">Between the brackets,
+the cursor waits.</textarea>
+            <div class="proof-foot"><span id="proof-name">Codex Mono / Regular</span><button type="button" id="reset" hidden>Reset text <svg class="icon" aria-hidden="true"><use href="#replay"/></svg></button></div>
+          </div>
+        </div>
+      </div>
+    </section>
+    <section id="serif" class="paper" aria-labelledby="serif-title">
+      <div class="wrap section">
+        <p class="eyebrow"><span>03 /</span> Codex Serif</p>
+        <div class="reading">
+          <div class="reading-margin"><span class="folio micro">Field notes / 01</span><span class="ampersand" aria-hidden="true">&amp;</span><span class="micro">Codex Serif<br>Regular + Italic</span></div>
+          <article>
+            <h2 id="serif-title">The pause<br> <em>between marks.</em></h2>
+            <p>At 06:40, the cursor stops at the end of a line. For a moment the screen is less a machine than a page: a dark mark, a pale ground, a little room on either side. We notice the word before we notice its letters.</p>
+            <p>In a terminal, the <i>i</i> and the <i>m</i> each get one cell. On this page, the narrow letter and the broad one take the room they need. Set the same sentence both ways and listen to where your eye slows down.</p>
+            <p class="colophon"><span>¶</span> Reading proof <i>/</i> 19 px</p>
+          </article>
+        </div>
+      </div>
+    </section>
+    <section id="install" class="wrap section install" aria-labelledby="install-title">
+      <div>
+        <p class="eyebrow"><span class="pulse-mark" aria-hidden="true"></span> The public edition</p>
+        <h2 id="install-title">At your desk<span>.</span></h2>
+        <p>Install Codex Mono, Sans and Serif in Regular, Italic, Bold and Bold Italic. These are the unpatched faces, without Nerd icons.</p>
+      </div>
+      <div class="download-panel">
+        <a class="action" href="Codex-typefaces.zip" download>Download the fonts <svg class="icon" aria-hidden="true"><use href="#download"/></svg></a>
+        <p>Unzip the archive and open the TTFs in your font manager. Select <strong>Codex Mono</strong> in your terminal settings.</p>
+        <span class="download-meta">12 TTFs + <a href="OFL.txt">SIL Open Font License</a></span>
+      </div>
+    </section>
+  </main>
+  <footer><div class="wrap footer-inner"><span class="brand"><img src="mark.svg" width="25" height="25" alt=""> Codex</span><span>Screen type specimen</span><a href="#top">Back to top ↑</a></div></footer>
+</body>
+</html>
