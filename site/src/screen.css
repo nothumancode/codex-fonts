@@ -44,7 +44,6 @@ button { background: none; }
   letter-spacing: .08em;
   text-transform: uppercase;
 }
-.masthead { border-bottom: 1px solid var(--line); }
 .masthead-inner { min-height: 72px; display: flex; align-items: center; gap: 1.4rem; }
 .brand { display: inline-flex; align-items: center; gap: .62rem; font: 700 1.55rem/1 var(--sans); letter-spacing: -.06em; text-decoration: none; }
 .brand img { flex: none; }
@@ -63,7 +62,7 @@ button { background: none; }
 h1 em span, h2 > span { color: #a8a8a8; }
 .pulse-mark { display: inline-block; width: 18px; height: 11px; background: repeating-linear-gradient(110deg, var(--signal) 0 2px, transparent 2px 5px); }
 h1 { margin: .2em 0 .24em; font: 400 clamp(4.5rem, 8.1vw, 8.6rem)/.92 var(--sans); letter-spacing: -.072em; }
-h1 em { font: italic 400 1.02em/.92 var(--serif); letter-spacing: -.075em; }
+h1 em { font: italic 400 1.02em/.92 var(--mono); letter-spacing: -.075em; }
 .dek { color: #c6c6c6; max-width: 37ch; font-size: clamp(1.05rem, 1.25vw, 1.23rem); line-height: 1.5; }
 .action { display: inline-flex; justify-content: space-between; align-items: center; gap: 1.5rem; padding: .78rem 1.1rem .78rem 1.22rem; background: var(--signal); color: var(--ground); font-weight: 700; text-decoration: none; }
 .action:hover { background: #ddd; text-decoration: underline; text-underline-offset: .2em; }
