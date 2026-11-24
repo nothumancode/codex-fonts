@@ -20,6 +20,11 @@ description = "Build twelve readable Nerd Font faces and webfonts"
 depends = ["install"]
 run = "uv run python -m codex_fonts.build"
 
+[tasks.public]
+description = "Build the redistributable OFL text faces without the icon patcher"
+depends = ["install"]
+run = "uv run python -m codex_fonts.build --public"
+
 [tasks.specimen]
 description = "Regenerate the browser specimen"
 depends = ["build"]
@@ -28,7 +33,12 @@ run = "uv run python -m codex_fonts.specimen"
 [tasks.test]
 description = "Run readability, shaping, Nerd glyph, and monospace tests"
 depends = ["build"]
-run = "uv run pytest -q"
+run = "uv run pytest -q tests/test_fonts.py"
+
+[tasks.check-public]
+description = "Check the public text edition without Docker"
+depends = ["public"]
+run = ["uv run pytest -q tests/test_public.py", "uv run python -m codex_fonts.qa --public"]
 
 [tasks.qa]
 description = "Run FontBakery's universal profile"
@@ -38,4 +48,4 @@ run = "uv run python -m codex_fonts.qa"
 [tasks.check]
 description = "Build, test, and run production font QA"
 depends = ["test", "qa", "specimen"]
-
+run = "mise run check-public"

@@ -7,6 +7,7 @@ Nerd Fonts v3.5.1 is applied through its digest-pinned Docker patcher.
 
 from __future__ import annotations
 
+import argparse
 import hashlib
 import io
 import json
@@ -18,9 +19,10 @@ import zipfile
 from pathlib import Path
 
 from fontTools import subset
-from fontTools.ttLib import TTFont, newTable
+from fontTools.ttLib import TTFont
 from fontTools.ttLib.tables.ttProgram import Program
 
+from .screen import apply_screen_cut
 
 ROOT = Path(__file__).resolve().parents[2]
 LOCK_PATH = ROOT / "sources.lock.json"
@@ -81,11 +83,23 @@ def set_name(font: TTFont, name_id: int, value: str) -> None:
     name_table.setName(value, name_id, 3, 1, 0x409)
 
 
-def finalize_nerd_binary(font: TTFont) -> None:
+def finish_binary(font: TTFont, win_ascent: int, win_descent: int) -> None:
     font["name"].names = [record for record in font["name"].names if record.platformID != 1]
-    for private_table in ("PfEd", "FFTM"):
+    for private_table in ("PfEd", "FFTM", "DSIG"):
         if private_table in font:
             del font[private_table]
+    os2, hhea = font["OS/2"], font["hhea"]
+    os2.sTypoAscender, os2.sTypoDescender, os2.sTypoLineGap = hhea.ascent, hhea.descent, hhea.lineGap
+    os2.fsSelection |= 1 << 7
+    os2.usWinAscent, os2.usWinDescent = win_ascent, win_descent
+    prep = font["prep"].program
+    smart_dropout = bytes.fromhex("B8 01 FF 85 B0 04 8D")
+    original = prep.getBytecode()
+    if not original.endswith(smart_dropout):
+        prep.fromBytecode(original + smart_dropout)
+
+
+def finalize_nerd_binary(font: TTFont) -> None:
     glyf = font["glyf"]
     minimum_y = 0
     maximum_y = 0
@@ -96,13 +110,7 @@ def finalize_nerd_binary(font: TTFont) -> None:
         glyph.recalcBounds(glyf)
         minimum_y = min(minimum_y, glyph.yMin)
         maximum_y = max(maximum_y, glyph.yMax)
-    font["OS/2"].usWinAscent = maximum_y
-    font["OS/2"].usWinDescent = -minimum_y
-
-    prep = newTable("prep")
-    prep.program = Program()
-    prep.program.fromBytecode(b"\xb8\x01\xff\x85\xb0\x04\x8d")
-    font["prep"] = prep
+    finish_binary(font, maximum_y, -minimum_y)
 
     font["post"].formatType = 3.0
     font["post"].extraNames = []
@@ -110,25 +118,30 @@ def finalize_nerd_binary(font: TTFont) -> None:
 
 
 def normalize_names(font: TTFont, family: str, ps_family: str, style: str, *, nerd_version: str | None = None) -> None:
-    full_name = family if style == "Regular" else f"{family} {style}"
+    label = "Bold Italic" if style == "BoldItalic" and not nerd_version else style
+    full_name = family if style == "Regular" else f"{family} {label}"
     ps_name = f"{ps_family}-{style}"
-    version = "Version 2.000"
+    version = "Version 2.100"
+    license_note = "This Font Software is licensed under the SIL Open Font License, Version 1.1."
     if nerd_version:
         version += f"; Nerd Fonts {nerd_version}"
+        license_note += " See the bundled font and icon license notices."
     for name_id, value in {
         1: family,
-        2: style,
-        3: f"2026;CDX2;{ps_name}",
+        2: label,
+        3: f"2.100;CDX2;{ps_name}",
         4: full_name,
         5: version,
         6: ps_name,
-        13: "This Font Software is licensed under the SIL Open Font License, Version 1.1. See the bundled font and icon license notices.",
+        13: license_note,
         14: "https://openfontlicense.org/open-font-license-official-text/",
         16: family,
-        17: style,
+        17: label,
     }.items():
         set_name(font, name_id, value)
     font["OS/2"].achVendID = "CDX2"
+    font.recalcTimestamp = False
+    font["head"].fontRevision = 2.100
     font["head"].created = FIXED_MAC_EPOCH
     font["head"].modified = FIXED_MAC_EPOCH
     if nerd_version:
@@ -214,17 +227,15 @@ def fetch_and_prepare(lock: dict) -> dict[str, list[Path]]:
             for style in STYLES:
                 member = f"{source['archive_root']}/fonts/complete/ttf/{source['source_prefix']}-{style}.ttf"
                 font = TTFont(io.BytesIO(bundle.read(member)))
+                normalize_names(font, family["base_family"], family["base_ps"], style)
                 if kind == "mono":
                     align_mono_x_height(font)
-                normalize_names(font, family["base_family"], family["base_ps"], style)
+                apply_screen_cut(font, kind, style)
                 output = output_dir / f"{family['base_ps']}-{style}.ttf"
                 font.save(output, reorderTables=True)
                 outputs.append(output)
         prepared[kind] = outputs
 
-    nerd = lock["nerd_fonts"]
-    download(nerd["license_url"], LICENSES / f"Nerd-Fonts-{nerd['version']}-LICENSE.txt")
-    download(nerd["glyph_licenses_url"], LICENSES / f"Nerd-Fonts-{nerd['version']}-GLYPH-LICENSES.md")
     return prepared
 
 
@@ -287,9 +298,8 @@ def font_style(font: TTFont) -> str:
 
 
 def save_web_subset(ttf_path: Path, output: Path) -> None:
-    font = TTFont(ttf_path)
+    font = TTFont(ttf_path, recalcTimestamp=False)
     options = subset.Options()
-    options.flavor = "woff2"
     options.layout_features = ["*"]
     options.name_IDs = ["*"]
     options.name_languages = ["*"]
@@ -297,19 +307,43 @@ def save_web_subset(ttf_path: Path, output: Path) -> None:
     subsetter = subset.Subsetter(options=options)
     subsetter.populate(unicodes=WEB_CODEPOINTS)
     subsetter.subset(font)
+    font.flavor = "woff2"
     output.parent.mkdir(parents=True, exist_ok=True)
     font.save(output, reorderTables=True)
 
 
+def fresh_directory(path: Path) -> None:
+    if path.exists():
+        shutil.rmtree(path)
+    path.mkdir(parents=True)
+
+
+def package_public(prepared: dict[str, list[Path]]) -> None:
+    public = DIST / "public"
+    fresh_directory(public)
+    for folder in ("ttf", "web", "licenses"):
+        (public / folder).mkdir(parents=True, exist_ok=True)
+    for paths in prepared.values():
+        fonts = [TTFont(source, recalcTimestamp=False) for source in paths]
+        win_ascent = max(font["head"].yMax for font in fonts)
+        win_descent = max(-font["head"].yMin for font in fonts)
+        for source, font in zip(paths, fonts, strict=True):
+            finish_binary(font, win_ascent, win_descent)
+            font.save(public / "ttf" / source.name)
+            font.flavor = "woff2"
+            font.save(public / "web" / source.with_suffix(".woff2").name)
+    shutil.copy2(LICENSES / "IBM-Plex-OFL-1.1.txt", public / "licenses")
+    shutil.copy2(ROOT / "docs" / "PUBLIC-FONTS.txt", public / "README.txt")
+
+
 def package_fonts(patched: dict[str, list[Path]], nerd_version: str) -> list[Path]:
-    if DIST.exists():
-        shutil.rmtree(DIST)
-    DIST.mkdir()
+    DIST.mkdir(exist_ok=True)
+    fresh_directory(DIST / "web")
     outputs: list[Path] = []
     for kind, paths in patched.items():
         family = FAMILIES[kind]
         family_dir = DIST / family["slug"]
-        family_dir.mkdir()
+        fresh_directory(family_dir)
         seen_styles: set[str] = set()
         for patched_path in paths:
             font = TTFont(patched_path)
@@ -320,7 +354,7 @@ def package_fonts(patched: dict[str, list[Path]], nerd_version: str) -> list[Pat
             font.save(ttf_path, reorderTables=True)
             outputs.append(ttf_path)
 
-            webfont = TTFont(ttf_path)
+            webfont = TTFont(ttf_path, recalcTimestamp=False)
             webfont.flavor = "woff2"
             woff2_path = ttf_path.with_suffix(".woff2")
             webfont.save(woff2_path, reorderTables=True)
@@ -333,17 +367,28 @@ def package_fonts(patched: dict[str, list[Path]], nerd_version: str) -> list[Pat
             raise RuntimeError(f"Missing packaged styles for {kind}: {set(STYLES) - seen_styles}")
 
     shutil.copy2(LOCK_PATH, DIST / "sources.lock.json")
-    shutil.copytree(LICENSES, DIST / "licenses")
+    fresh_directory(DIST / "licenses")
+    shutil.copytree(LICENSES, DIST / "licenses", dirs_exist_ok=True)
     manifest = DIST / "MANIFEST.txt"
-    manifest.write_text("\n".join(str(path.relative_to(ROOT)) for path in outputs) + "\n")
+    manifest.write_text("\n".join(f"dist/{path.relative_to(DIST)}" for path in outputs) + "\n")
     return outputs
 
 
 def main() -> None:
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument("--public", action="store_true", help="Build only the OFL text faces (no icon patch or Docker).")
+    args = parser.parse_args()
     lock = load_lock()
     prepared = fetch_and_prepare(lock)
-    patched = {kind: run_patcher(kind, paths, lock["nerd_fonts"]) for kind, paths in prepared.items()}
-    outputs = package_fonts(patched, lock["nerd_fonts"]["version"])
+    if args.public:
+        package_public(prepared)
+        print("Built 12 OFL text faces as TTF and WOFF2 in dist/public")
+        return
+    nerd = lock["nerd_fonts"]
+    download(nerd["license_url"], LICENSES / f"Nerd-Fonts-{nerd['version']}-LICENSE.txt")
+    download(nerd["glyph_licenses_url"], LICENSES / f"Nerd-Fonts-{nerd['version']}-GLYPH-LICENSES.md")
+    patched = {kind: run_patcher(kind, paths, nerd) for kind, paths in prepared.items()}
+    outputs = package_fonts(patched, nerd["version"])
     print(f"Built {len(outputs)} readable font files across 3 families and 4 styles")
 
 

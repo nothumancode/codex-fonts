@@ -1,4 +1,5 @@
 from pathlib import Path
+from hashlib import sha256
 
 import uharfbuzz as hb
 from fontTools.ttLib import TTFont
@@ -146,3 +147,25 @@ def test_showcase_web_subsets_are_small_and_usable():
         assert set(range(0x20, 0x7F)) | NERD_PROBES <= set(font.getBestCmap())
         assert english_name(font, 1) == family_name
 
+
+def test_every_private_cut_keeps_its_full_repertoire_and_real_woff2s():
+    coverage = {
+        "mono": "ffe159d30343232c15007450a1a6cbb4d1d3520a110eaa6fadbcffcbd63c72af",
+        "sans": "235b4244c28861fb8f28ede035cb5f6bcbce3f22ec3a17ed19fcc5def5747f05",
+        "serif": "e54e12a6f3798801b3156b77d073df7c1f12cc6e02c77210d7d22358e690ffa8",
+    }
+    for kind in FAMILIES:
+        for style in STYLES:
+            font = TTFont(font_path(kind, style))
+            cmap = font.getBestCmap()
+            assert sha256(b"".join(cp.to_bytes(4, "big") for cp in sorted(cmap))).hexdigest() == coverage[kind]
+            full = TTFont(font_path(kind, style, "woff2"))
+            subset = TTFont(ROOT / "dist" / "web" / f"Codex{kind.title()}-{style}.woff2")
+            assert full.flavor == subset.flavor == "woff2"
+            assert cmap == full.getBestCmap()
+            assert NERD_PROBES <= set(subset.getBestCmap()) <= set(cmap)
+            master = TTFont(ROOT / "build" / "readable" / "unpatched" / kind / f"Codex{kind.title()}-{style}.ttf")
+            assert font["prep"].program.getBytecode().startswith(master["prep"].program.getBytecode())
+            assert (font["hhea"].ascent, font["hhea"].descent, font["hhea"].lineGap) == (1025, -275, 0)
+            if kind == "mono":
+                assert all(font["hmtx"][name][0] == 600 for name in cmap.values())

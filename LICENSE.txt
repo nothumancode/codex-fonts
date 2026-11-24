@@ -3,7 +3,12 @@ License, Version 1.1. The complete governing text is bundled at:
 
     vendor/licenses/IBM-Plex-OFL-1.1.txt
 
-The Nerd Font patcher and aggregated icon glyphs have additional notices at:
+The public text edition (dist/public/) is built before Nerd Font patching.
+Include its bundled IBM OFL and copyright notice with copies of the TTFs
+or WOFF2s. No Nerd Font icon sets are added to this edition.
+
+For the separate private Nerd Font builds, the patcher and aggregated icon
+glyphs have additional notices at:
 
     vendor/licenses/Nerd-Fonts-3.5.1-LICENSE.txt
     vendor/licenses/Nerd-Fonts-3.5.1-GLYPH-LICENSES.md
@@ -17,7 +22,7 @@ The project-specific Python build and test code is separately available under
 the MIT terms in LICENSE-CODE.txt.
 
 The complete Nerd Font patch includes multiple icon sources and Font Logos,
-which upstream lists as unlicensed. Treat these outputs as local/private assets
+which upstream lists as unlicensed. Treat the complete patched outputs,
+including the derived dist/web/ subsets, as local/private assets
 until the selected icon sets have been narrowed or separately cleared for the
 intended public distribution.
-
