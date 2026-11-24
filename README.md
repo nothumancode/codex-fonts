@@ -1,6 +1,6 @@
 # Codex Readable Nerd Fonts
 
-[Public Codex type specimen — build and run the interactive showcase](site/README.md)
+[Try the live Codex specimen](https://nothumancode.github.io/codex-fonts/) · [Download the fonts (ZIP)](https://github.com/nothumancode/codex-fonts/releases/latest/download/Codex-Fonts.zip) · [Build the specimen locally](site/README.md)
 
 A practical three-family type system for ordinary interfaces, long-form text,
 and terminals:
@@ -21,11 +21,16 @@ figures by default; choose OpenType `lnum` for lining figures. See the
 
 ## Install or embed the public text edition
 
+The [GitHub Release](https://github.com/nothumancode/codex-fonts/releases/latest) includes the 12 installable TTFs, 12 matching WOFF2s and their OFL notice. Unzip `Codex-Fonts.zip` and install the faces in `ttf/`, or self-host the files in `web/`. To build the same edition yourself:
+
 ```sh
 mise install
 mise run public
 mise run check-public
+mise exec -- python tools/package_public.py
 ```
+
+The last command writes `build/Codex-Fonts.zip`. The **Public font download** GitHub Actions workflow attaches that ZIP to its runs. Run artifacts expire and downloading them requires a GitHub sign-in; use the Release for a persistent, sign-in-free link.
 
 Install the files in **dist/public/ttf/** using your operating system's font
 installer. For websites, use **dist/public/web/**. For example,
