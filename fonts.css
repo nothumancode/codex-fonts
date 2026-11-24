@@ -1,0 +1,12 @@
+@font-face { font-family: "Codex Mono"; src: url("fonts/CodexMono-Regular.woff2") format("woff2"); font-style: normal; font-weight: 400; font-display: swap; }
+@font-face { font-family: "Codex Mono"; src: url("fonts/CodexMono-Italic.woff2") format("woff2"); font-style: italic; font-weight: 400; font-display: swap; }
+@font-face { font-family: "Codex Mono"; src: url("fonts/CodexMono-Bold.woff2") format("woff2"); font-style: normal; font-weight: 700; font-display: swap; }
+@font-face { font-family: "Codex Mono"; src: url("fonts/CodexMono-BoldItalic.woff2") format("woff2"); font-style: italic; font-weight: 700; font-display: swap; }
+@font-face { font-family: "Codex Sans"; src: url("fonts/CodexSans-Regular.woff2") format("woff2"); font-style: normal; font-weight: 400; font-display: swap; }
+@font-face { font-family: "Codex Sans"; src: url("fonts/CodexSans-Italic.woff2") format("woff2"); font-style: italic; font-weight: 400; font-display: swap; }
+@font-face { font-family: "Codex Sans"; src: url("fonts/CodexSans-Bold.woff2") format("woff2"); font-style: normal; font-weight: 700; font-display: swap; }
+@font-face { font-family: "Codex Sans"; src: url("fonts/CodexSans-BoldItalic.woff2") format("woff2"); font-style: italic; font-weight: 700; font-display: swap; }
+@font-face { font-family: "Codex Serif"; src: url("fonts/CodexSerif-Regular.woff2") format("woff2"); font-style: normal; font-weight: 400; font-display: swap; }
+@font-face { font-family: "Codex Serif"; src: url("fonts/CodexSerif-Italic.woff2") format("woff2"); font-style: italic; font-weight: 400; font-display: swap; }
+@font-face { font-family: "Codex Serif"; src: url("fonts/CodexSerif-Bold.woff2") format("woff2"); font-style: normal; font-weight: 700; font-display: swap; }
+@font-face { font-family: "Codex Serif"; src: url("fonts/CodexSerif-BoldItalic.woff2") format("woff2"); font-style: italic; font-weight: 700; font-display: swap; }

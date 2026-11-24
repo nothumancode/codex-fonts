@@ -1,0 +1,8 @@
+  01       02       03
+  0O oO    1Il|     rn m
+  5S 2Z    8B 6G    vv w
+
+  cr  ea  create  recreate
+  ┌──────┬─────────────┐
+  │ 0x01 │ a-b  a+b  = │
+  └──────┴─────────────┘
