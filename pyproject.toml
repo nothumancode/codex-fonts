@@ -4,7 +4,7 @@ build-backend = "hatchling.build"
 
 [project]
 name = "codex-inspired-fonts"
-version = "2.1.0"
+version = "2.2.0"
 description = "Readable Codex Sans, Serif, and Mono Nerd Font derivatives"
 requires-python = ">=3.13,<3.14"
 dependencies = [

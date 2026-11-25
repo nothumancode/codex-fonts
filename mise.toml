@@ -16,7 +16,7 @@ description = "Install the locked local font-production environment"
 run = "uv sync --frozen"
 
 [tasks.build]
-description = "Build twelve readable Nerd Font faces and webfonts"
+description = "Build the private Nerd Font faces and webfonts"
 depends = ["install"]
 run = "uv run python -m codex_fonts.build"
 

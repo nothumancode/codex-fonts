@@ -2,6 +2,8 @@
 
 from pathlib import Path
 
+from .release import STYLES
+
 
 ROOT = Path(__file__).resolve().parents[2]
 FAMILIES = {
@@ -14,7 +16,7 @@ FAMILIES = {
 def font_faces() -> str:
     rules = []
     for family, relative in FAMILIES.values():
-        for style, weight, italic in (("Regular", 400, "normal"), ("Italic", 400, "italic"), ("Bold", 700, "normal"), ("BoldItalic", 700, "italic")):
+        for style, (weight, italic) in STYLES.items():
             rules.append(f"@font-face{{font-family:'{family}';src:url('../dist/{relative}-{style}.woff2') format('woff2');font-weight:{weight};font-style:{italic};font-display:block}}")
     return "\n".join(rules)
 
@@ -43,14 +45,14 @@ pre{{margin:0;padding:clamp(20px,4vw,48px);overflow:auto;font:400 clamp(12px,1.4
 .pairs{{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:12px;margin-top:24px}}.pair{{padding:18px;border:1px solid var(--line);border-radius:12px;font:24px/1.45 'Codex Mono Nerd Font Mono',monospace;background:#fff}}.pair small{{display:block;color:var(--muted);font:12px 'Codex Sans Nerd Font Propo',sans-serif}}
 .glyphs{{font:clamp(28px,5vw,66px)/1.6 'Codex Mono Nerd Font Mono',monospace;overflow-wrap:anywhere;color:var(--accent)}}footer{{padding:50px;text-align:center;color:var(--muted);font-size:13px}}@media(max-width:620px){{.section-head{{display:block}}header{{min-height:60vh}}.pair{{font-size:20px}}}}
 </style></head><body>
-<header><div class="eyebrow">Codex Type System / Readable Edition</div><h1>Made to be read.</h1><p>A coherent sans, serif, and true monospaced Nerd Font family for ordinary interfaces, long-form reading, and real terminals. Four styles each: regular, italic, bold, and bold italic.</p></header>
+<header><div class="eyebrow">Codex Type System / Readable Edition</div><h1>Made to be read.</h1><p>A coherent sans, serif, and true monospaced Nerd Font family for ordinary interfaces, long-form reading, and real terminals. Six styles each: Regular, Medium and Bold, all with matching italics.</p></header>
 <main>
-<section class="sans"><div class="section-head"><h2>Codex Sans</h2><div class="label">UI + everyday web</div></div><div class="prose-grid"><div class="copy large"><p>Good interface typography should disappear into the work. Open counters, distinct silhouettes, and a generous x-height keep instructions clear even when the screen is busy.</p><p><b>Bold establishes structure.</b> <i>Italic adds a quieter second voice.</i> Neither needs to shout.</p><div class="weights">Regular — The quick brown fox, 0123456789<br><i>Italic — Thoughtful emphasis without noise</i><br><b>Bold — Actions, states, and hierarchy</b><br><b><i>Bold Italic — Urgent, but still composed</i></b></div></div><div class="ui"><div class="label">Agent status</div><h3>Ready for review</h3><p>Four checks passed. One visual confirmation remains.</p><button>Open evidence</button><button class="secondary">View diff</button></div></div></section>
+<section class="sans"><div class="section-head"><h2>Codex Sans</h2><div class="label">UI + everyday web</div></div><div class="prose-grid"><div class="copy large"><p>Good interface typography should disappear into the work. Open counters, distinct silhouettes, and a generous x-height keep instructions clear even when the screen is busy.</p><p><b>Bold establishes structure.</b> <i>Italic adds a quieter second voice.</i> Neither needs to shout.</p><div class="weights">Regular — The quick brown fox, 0123456789<br><i>Italic — Thoughtful emphasis without noise</i><br><span style="font-weight:500">Medium — Labels and prompts<br><i>Medium Italic — Notes and comments</i></span><br><b>Bold — Actions, states, and hierarchy</b><br><b><i>Bold Italic — Urgent, but still composed</i></b></div></div><div class="ui"><div class="label">Agent status</div><h3>Ready for review</h3><p>Four checks passed. One visual confirmation remains.</p><button>Open evidence</button><button class="secondary">View diff</button></div></div></section>
 <section class="serif"><div class="section-head"><h2>Codex Serif</h2><div class="label">Editorial + long-form</div></div><div class="prose-grid"><article class="copy large"><p>Evidence changes the texture of a decision. What began as a plausible explanation becomes a durable conclusion only after the behavior has been reproduced, observed, and written down.</p><p>The serif face is meant for that slower register: reports, research notes, design narratives, and documentation with enough room to breathe.</p></article><article class="copy"><p><b>Readable at ordinary sizes.</b> This paragraph is set at sixteen pixels, not poster scale. Letterforms remain conventional, punctuation carries its weight, and mixed-case text forms a steady line.</p><p><i>“Clarity is not simplification for its own sake; it is the removal of accidental difficulty.”</i></p><p>Diacritics: À É Ö ñ æ œ ß. Symbols: € £ ¥ © ™. Dashes—short and long—quotes “curved,” ellipses… all present.</p></article></div></section>
 <section><div class="section-head"><h2 class="mono">Codex Mono</h2><div class="label">True mono + Nerd icons</div></div><div class="terminal"><div class="termbar mono">● ● ● &nbsp; codex / verification</div><pre><span class="prompt"> main </span> mise run check
 <span class="icons">󰊢</span> source   OFL-derived readable letterforms
 <span class="icons"></span> terminal one fixed cell for text + icons
-<span class="icons">󰉋</span> output   TTF + WOFF2 / four styles
+<span class="icons">󰉋</span> output   TTF + WOFF2 / six styles
 
 ┌──────────────────┬──────────┐
 │ 0O  1Il|  rn  m  │ 100% ███ │
@@ -78,10 +80,10 @@ const result = await agent.verify({{
         escaped_sample = sample.replace("&", "&amp;").replace("<", "&lt;").replace(">", "&gt;").replace("\n", "<br>")
         faces = "".join(
             f"@font-face{{font-family:'Proof';src:url('../dist/web/{filename}-{style}.woff2');font-weight:{weight};font-style:{italic}}}"
-            for style, weight, italic in (("Regular", 400, "normal"), ("Italic", 400, "italic"), ("Bold", 700, "normal"), ("BoldItalic", 700, "italic"))
+            for style, (weight, italic) in STYLES.items()
         )
         proof = f"""<!doctype html><html><head><meta charset="utf-8"><style>{faces}
-*{{box-sizing:border-box}}body{{margin:0;padding:72px;background:#f5f2ea;color:#17201b;font-family:'Proof';font-synthesis:none}}.meta{{display:flex;justify-content:space-between;color:#087a4a;font:700 13px 'Proof';letter-spacing:.12em;text-transform:uppercase}}h1{{font:700 86px/.95 'Proof';margin:.45em 0}}.sample{{padding-block:34px;border-block:1px solid #cfd5cf;font:400 30px/1.55 'Proof'}}.styles{{margin-top:34px;font:22px/1.7 'Proof'}}i{{font-style:italic}}b{{font-weight:700}}</style></head><body><div class="meta"><span>{family}</span><span>{purpose}</span></div><h1>Made to be read.</h1><div class="sample">{escaped_sample}</div><div class="styles">Regular — ÀÉÖ ñ æ œ ß 0123456789<br><i>Italic — thoughtful emphasis</i><br><b>Bold — structure and hierarchy</b><br><b><i>Bold Italic — composed urgency</i></b></div></body></html>"""
+*{{box-sizing:border-box}}body{{margin:0;padding:72px;background:#f5f2ea;color:#17201b;font-family:'Proof';font-synthesis:none}}.meta{{display:flex;justify-content:space-between;color:#087a4a;font:700 13px 'Proof';letter-spacing:.12em;text-transform:uppercase}}h1{{font:700 86px/.95 'Proof';margin:.45em 0}}.sample{{padding-block:34px;border-block:1px solid #cfd5cf;font:400 30px/1.55 'Proof'}}.styles{{margin-top:34px;font:22px/1.7 'Proof'}}i{{font-style:italic}}b{{font-weight:700}}</style></head><body><div class="meta"><span>{family}</span><span>{purpose}</span></div><h1>Made to be read.</h1><div class="sample">{escaped_sample}</div><div class="styles">Regular — ÀÉÖ ñ æ œ ß 0123456789<br><i>Italic — thoughtful emphasis</i><br><span style="font-weight:500">Medium — labels and prompts<br><i>Medium Italic — notes and comments</i></span><br><b>Bold — structure and hierarchy</b><br><b><i>Bold Italic — composed urgency</i></b></div></body></html>"""
         proof_path = output_dir / f"{slug}.html"
         proof_path.write_text(proof)
         print(f"Wrote {proof_path.relative_to(ROOT)}")

@@ -1,6 +1,6 @@
 # Codex Readable Nerd Fonts
 
-[Try the live Codex specimen](https://nothumancode.github.io/codex-fonts/) · [Download the fonts (ZIP)](https://github.com/nothumancode/codex-fonts/releases/latest/download/Codex-Fonts.zip) · [Build the specimen locally](site/README.md)
+[Try the published specimen](https://nothumancode.github.io/codex-fonts/) · [Download the published fonts (ZIP)](https://github.com/nothumancode/codex-fonts/releases/latest/download/Codex-Fonts.zip) · [Build the specimen locally](site/README.md)
 
 A practical three-family type system for ordinary interfaces, long-form text,
 and terminals:
@@ -9,19 +9,22 @@ and terminals:
 - **Codex Serif Nerd Font Propo** — proportional editorial and reading serif.
 - **Codex Mono Nerd Font Mono** — true fixed-cell terminal and coding font.
 
-The **2.100 screen cut** also comes as Codex Mono, Codex Sans and Codex Serif
-without the icon patch. Both editions have four static styles: Regular,
-Italic, Bold and Bold Italic. There is no variable or pixel-display face.
+The **2.200 Medium screen cut** comes in both the OFL-only Codex Mono, Sans
+and Serif and the private icon editions. Each family has six static faces:
+Regular, Medium and Bold, each with a drawn italic. Mono's new 500 weight
+fits the same terminal columns as 400 and 700. Its shorter middle stroke in
+`m` and clipped `r` flag help separate the one-cell `m` from the two-cell
+`rn`. See the [design decisions, specimens and proof recipe](docs/MEDIUM-CUT.md).
 
 Mono gives the zero a free-standing angled mark, turns the foot of upright
 `l` away from `I`, and fits the hyphen to the rest of the operators. Sans opens
 the lower lips of `c` and `e` in interface text. Serif sets dates in text
-figures by default; choose OpenType `lnum` for lining figures. See the
-[cut notes and proof recipe](docs/SCREEN-CUT.md) for measurements.
+figures by default; choose OpenType `lnum` for lining figures. These details
+were introduced in the [2.100 screen cut](docs/SCREEN-CUT.md).
 
 ## Install or embed the public text edition
 
-The [GitHub Release](https://github.com/nothumancode/codex-fonts/releases/latest) includes the 12 installable TTFs, 12 matching WOFF2s and their OFL notice. Unzip `Codex-Fonts.zip` and install the faces in `ttf/`, or self-host the files in `web/`. To build the same edition yourself:
+The [GitHub Release](https://github.com/nothumancode/codex-fonts/releases/latest) is the published edition. To try the 2.200 candidate from this source tree, use its **Public font download** Actions artifact or build it:
 
 ```sh
 mise install
@@ -30,12 +33,17 @@ mise run check-public
 mise exec -- python tools/package_public.py
 ```
 
-The last command writes `build/Codex-Fonts.zip`. The **Public font download** GitHub Actions workflow attaches that ZIP to its runs. Run artifacts expire and downloading them requires a GitHub sign-in; use the Release for a persistent, sign-in-free link.
+The last command writes `build/Codex-Fonts-2.200.zip` with 18 TTFs, 18 WOFF2s,
+the OFL/copyright notice, the public source URLs and archive SHA-256 pins in
+`sources.json`, and a file manifest. After unzipping, run
+`sha256sum --check SHA256SUMS`. The workflow attaches that ZIP to its runs;
+run artifacts expire and require GitHub sign-in. It does not publish a Release or Pages.
 
 Install the files in **dist/public/ttf/** using your operating system's font
 installer. For websites, use **dist/public/web/**. For example,
 `CodexMono-Regular.woff2` is Codex Mono, weight 400, normal style;
-`CodexMono-BoldItalic.woff2` is weight 700, italic. These WOFF2s have the same
+`CodexMono-MediumItalic.woff2` is weight 500, italic. Register each file
+with its own CSS weight and slant; no faux bold or slant is needed. These WOFF2s have the same
 repertoire and layout features as the matching TTFs. Include
 `dist/public/licenses/IBM-Plex-OFL-1.1.txt` when sharing either format.
 This build needs no Docker and imports no Nerd Font icons.
@@ -78,8 +86,8 @@ live under `build/readable/`. Generated fonts in `dist/` are not committed.
 `mise run check` checks both editions: style and format inventory, names and
 licenses, source coverage, HarfBuzz shaping, advances and Mono cells,
 stylistic alternates, hinting and web encodings. It also regenerates the
-private specimen and runs FontBakery's universal profile on the six Regular
-TTFs. Per-font diagnostics, including warnings, are in `build/fontbakery/`.
+private specimen and runs FontBakery's universal profile on each complete
+six-style family in both editions. Reports, including warnings, are in `build/fontbakery/`.
 `mise run check-public` checks the public edition alone.
 
 Build and test code is [MIT-licensed](LICENSE-CODE.txt); see

@@ -1,8 +1,10 @@
-CODEX 2.100 — SCREEN CUT
+CODEX 2.200 — MEDIUM SCREEN CUT
 
 Install the TTFs for desktop applications. Choose Codex Mono in your
 terminal, Codex Sans for interface text, and Codex Serif for prose.
-Each family includes Regular, Italic, Bold and Bold Italic. The WOFF2s
+Each family includes Regular, Medium and Bold with matching true italics.
+In CSS, register the Medium and MediumItalic files with font-weight: 500
+and font-style: normal or italic. The WOFF2s
 in web/ carry the same character repertoire as their matching TTFs.
 
 These are modified derivatives of IBM Plex Sans 1.1.0, Serif 2.0.0
@@ -11,6 +13,8 @@ and Mono 2.5.0. Copyright and design credits are retained in each face.
 are not IBM releases. The governing SIL Open Font License 1.1 and IBM
 notice accompany the fonts in licenses/IBM-Plex-OFL-1.1.txt. Include
 that notice and license when embedding or redistributing these files.
+The archive includes the source pins in sources.json and a SHA-256
+manifest. In the extracted folder, run: sha256sum --check SHA256SUMS
 
 This edition is built directly from the text masters. It contains no
 glyph additions from the Nerd Fonts patcher; do not expect Powerline or
@@ -20,3 +24,8 @@ Unicode box-drawing and block-element characters.
 Codex Serif uses text figures by default; choose OpenType “lnum” for
 lining figures in tables. Codex Mono's OpenType “zero” is a through-slash
 alternative to the default free-standing mark.
+
+In Mono the flag of r stops sooner and the middle leg of m ends a little
+above its neighbours. The printable grid is still 600 units; existing
+zero-width marks remain nonspacing. Use Medium for a darker terminal
+without changing the number of columns.

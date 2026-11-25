@@ -1,10 +1,13 @@
-"""Run FontBakery's universal profile on each edition's regular faces."""
+"""Run FontBakery on each complete static family, including its style-link groups."""
 
 from __future__ import annotations
 
 import argparse
 import subprocess
 from pathlib import Path
+
+from .build import FAMILIES
+from .release import STYLES
 
 
 ROOT = Path(__file__).resolve().parents[2]
@@ -16,21 +19,20 @@ def main() -> None:
     args = parser.parse_args()
     reports = ROOT / "build" / "fontbakery"
     reports.mkdir(parents=True, exist_ok=True)
-    pattern = "public/ttf/*-Regular.ttf" if args.public else "codex-*/*-Regular.ttf"
-    fonts = sorted((ROOT / "dist").glob(pattern))
-    if len(fonts) != 3:
-        raise SystemExit(f"Expected 3 regular TTFs, found {len(fonts)}")
     failed = False
-    for font in fonts:
-        report = reports / f"{font.stem}.txt"
+    for family in FAMILIES.values():
+        prefix = family["base_ps" if args.public else "final_ps"]
+        folder = ROOT / "dist" / ("public/ttf" if args.public else family["slug"])
+        fonts = [folder / f"{prefix}-{style}.ttf" for style in STYLES]
+        report = reports / f"{prefix}.txt"
         result = subprocess.run(
-            ["fontbakery", "check-universal", "--succinct", "--loglevel", "WARN", str(font)],
+            ["fontbakery", "check-universal", "--succinct", "--loglevel", "WARN", *map(str, fonts)],
             text=True,
             stdout=subprocess.PIPE,
             stderr=subprocess.STDOUT,
         )
         report.write_text(result.stdout)
-        print(f"FontBakery {font.name}: exit {result.returncode}; report {report.relative_to(ROOT)}")
+        print(f"FontBakery {prefix}: exit {result.returncode}; report {report.relative_to(ROOT)}", flush=True)
         failed |= result.returncode != 0
     if failed:
         raise SystemExit("FontBakery reported one or more production failures")
