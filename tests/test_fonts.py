@@ -6,7 +6,7 @@ from fontTools.ttLib import TTFont
 
 
 ROOT = Path(__file__).resolve().parents[1]
-STYLES = ("Regular", "Italic", "Bold", "BoldItalic")
+STYLES = ("Regular", "Italic", "Medium", "MediumItalic", "Bold", "BoldItalic")
 FAMILIES = {
     "sans": ("codex-sans-nf-propo", "CodexSansNerdFontPropo", "Codex Sans Nerd Font Propo"),
     "serif": ("codex-serif-nf-propo", "CodexSerifNerdFontPropo", "Codex Serif Nerd Font Propo"),
@@ -50,8 +50,17 @@ def test_names_versions_and_license_are_collision_safe():
     for kind, (_, _, family_name) in FAMILIES.items():
         for style in STYLES:
             font = TTFont(font_path(kind, style))
-            assert english_name(font, 1) == family_name
-            assert english_name(font, 2) == style
+            medium = "Medium" in style
+            label = style.replace("Italic", " Italic").strip()
+            assert english_name(font, 1) == (family_name + " Med" if medium else family_name)
+            assert english_name(font, 2) == (("Italic" if "Italic" in style else "Regular") if medium else label)
+            assert english_name(font, 16) == family_name and english_name(font, 17) == label
+            assert english_name(font, 5).startswith("Version 2.200;")
+            assert font["OS/2"].usWeightClass == (500 if medium else 700 if "Bold" in style else 400)
+            assert bool(font["head"].macStyle & 2) == ("Italic" in style)
+            assert (font["post"].underlinePosition, font["post"].underlineThickness) == {
+                "mono": (-140, 60), "sans": (-95, 60), "serif": (-78, 44),
+            }[kind]
             assert "Nerd Fonts 3.5.1" in english_name(font, 5)
             assert "SIL Open Font License" in english_name(font, 13)
             user_facing = " ".join(english_name(font, name_id) for name_id in (1, 4, 6, 16))
@@ -169,3 +178,5 @@ def test_every_private_cut_keeps_its_full_repertoire_and_real_woff2s():
             assert (font["hhea"].ascent, font["hhea"].descent, font["hhea"].lineGap) == (1025, -275, 0)
             if kind == "mono":
                 assert all(font["hmtx"][name][0] == 600 for name in cmap.values())
+                _, positions = shape(font_path(kind, style), "q\u0323")
+                assert [p.x_advance for p in positions] == [600, 0]

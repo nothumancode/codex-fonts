@@ -19,9 +19,11 @@ import zipfile
 from pathlib import Path
 
 from fontTools import subset
+from fontTools.otlLib.builder import buildStatTable
 from fontTools.ttLib import TTFont
 from fontTools.ttLib.tables.ttProgram import Program
 
+from .release import EPOCH, FONT_VERSION, STYLES, style_label
 from .screen import apply_screen_cut
 
 ROOT = Path(__file__).resolve().parents[2]
@@ -30,13 +32,12 @@ CACHE = ROOT / ".cache" / "font-sources"
 BUILD = ROOT / "build" / "readable"
 DIST = ROOT / "dist"
 LICENSES = ROOT / "vendor" / "licenses"
-STYLES = ("Regular", "Italic", "Bold", "BoldItalic")
 FAMILIES = {
     "sans": {"base_family": "Codex Sans", "base_ps": "CodexSans", "final_family": "Codex Sans Nerd Font Propo", "final_ps": "CodexSansNerdFontPropo", "slug": "codex-sans-nf-propo"},
     "serif": {"base_family": "Codex Serif", "base_ps": "CodexSerif", "final_family": "Codex Serif Nerd Font Propo", "final_ps": "CodexSerifNerdFontPropo", "slug": "codex-serif-nf-propo"},
     "mono": {"base_family": "Codex Mono", "base_ps": "CodexMono", "final_family": "Codex Mono Nerd Font Mono", "final_ps": "CodexMonoNerdFontMono", "slug": "codex-mono-nf-mono"},
 }
-FIXED_UNIX_EPOCH = int(os.environ.get("SOURCE_DATE_EPOCH", "1787875200"))
+FIXED_UNIX_EPOCH = int(os.environ.get("SOURCE_DATE_EPOCH", EPOCH))
 FIXED_MAC_EPOCH = FIXED_UNIX_EPOCH + 2_082_844_800
 WEB_ICON_CODEPOINTS = {ord(character) for character in "󰉋󰊢󰆍✓"}
 WEB_CODEPOINTS = (
@@ -91,7 +92,19 @@ def finish_binary(font: TTFont, win_ascent: int, win_descent: int) -> None:
     os2, hhea = font["OS/2"], font["hhea"]
     os2.sTypoAscender, os2.sTypoDescender, os2.sTypoLineGap = hhea.ascent, hhea.descent, hhea.lineGap
     os2.fsSelection |= 1 << 7
+    if font["name"].getDebugName(2) == "Regular":
+        os2.fsSelection |= 1 << 6
     os2.usWinAscent, os2.usWinDescent = win_ascent, win_descent
+    weight = os2.usWeightClass
+    weight_value = {"value": weight, "name": {400: "Regular", 500: "Medium", 700: "Bold"}[weight]}
+    if weight == 400:
+        weight_value.update(flags=2, linkedValue=700)
+    slant_value = ({"value": 1, "name": "Italic"} if os2.fsSelection & 1 else
+                   {"value": 0, "name": "Roman", "flags": 2, "linkedValue": 1})
+    buildStatTable(font, [
+        {"tag": "wght", "name": "Weight", "values": [weight_value]},
+        {"tag": "ital", "name": "Italic", "values": [slant_value]},
+    ], elidedFallbackName="Regular", macNames=False)
     prep = font["prep"].program
     smart_dropout = bytes.fromhex("B8 01 FF 85 B0 04 8D")
     original = prep.getBytecode()
@@ -118,18 +131,21 @@ def finalize_nerd_binary(font: TTFont) -> None:
 
 
 def normalize_names(font: TTFont, family: str, ps_family: str, style: str, *, nerd_version: str | None = None) -> None:
-    label = "Bold Italic" if style == "BoldItalic" and not nerd_version else style
+    label = style_label(style)
+    medium = STYLES[style][0] == 500
+    legacy_family = family + (" Med" if nerd_version else " Medium") if medium else family
+    legacy_style = ("Italic" if "Italic" in style else "Regular") if medium else label
     full_name = family if style == "Regular" else f"{family} {label}"
     ps_name = f"{ps_family}-{style}"
-    version = "Version 2.100"
+    version = f"Version {FONT_VERSION}"
     license_note = "This Font Software is licensed under the SIL Open Font License, Version 1.1."
     if nerd_version:
         version += f"; Nerd Fonts {nerd_version}"
         license_note += " See the bundled font and icon license notices."
     for name_id, value in {
-        1: family,
-        2: label,
-        3: f"2.100;CDX2;{ps_name}",
+        1: legacy_family,
+        2: legacy_style,
+        3: f"{FONT_VERSION};CDX2;{ps_name}",
         4: full_name,
         5: version,
         6: ps_name,
@@ -141,7 +157,7 @@ def normalize_names(font: TTFont, family: str, ps_family: str, style: str, *, ne
         set_name(font, name_id, value)
     font["OS/2"].achVendID = "CDX2"
     font.recalcTimestamp = False
-    font["head"].fontRevision = 2.100
+    font["head"].fontRevision = float(FONT_VERSION)
     font["head"].created = FIXED_MAC_EPOCH
     font["head"].modified = FIXED_MAC_EPOCH
     if nerd_version:
@@ -224,10 +240,13 @@ def fetch_and_prepare(lock: dict) -> dict[str, list[Path]]:
             license_path = LICENSES / "IBM-Plex-OFL-1.1.txt"
             if not license_path.exists():
                 license_path.write_bytes(license_data)
-            for style in STYLES:
-                member = f"{source['archive_root']}/fonts/complete/ttf/{source['source_prefix']}-{style}.ttf"
-                font = TTFont(io.BytesIO(bundle.read(member)))
+            prefix = f"{source['archive_root']}/fonts/complete/ttf/{source['source_prefix']}-"
+            fonts = {style: TTFont(io.BytesIO(bundle.read(f"{prefix}{style}.ttf"))) for style in STYLES}
+            regular = fonts["Regular"]["post"]
+            for style, font in fonts.items():
                 normalize_names(font, family["base_family"], family["base_ps"], style)
+                font["post"].underlinePosition = regular.underlinePosition
+                font["post"].underlineThickness = regular.underlineThickness
                 if kind == "mono":
                     align_mono_x_height(font)
                 apply_screen_cut(font, kind, style)
@@ -291,10 +310,11 @@ def font_style(font: TTFont) -> str:
     if not record:
         raise ValueError("Patched font has no style name")
     value = record.toUnicode().replace(" ", "")
-    aliases = {"Roman": "Regular", "BoldItalic": "BoldItalic", "Italic": "Italic", "Bold": "Bold", "Regular": "Regular"}
-    if value not in aliases:
+    if value == "Roman":
+        return "Regular"
+    if value not in STYLES:
         raise ValueError(f"Unexpected patched font style: {value}")
-    return aliases[value]
+    return value
 
 
 def save_web_subset(ttf_path: Path, output: Path) -> None:
@@ -334,6 +354,7 @@ def package_public(prepared: dict[str, list[Path]]) -> None:
             font.save(public / "web" / source.with_suffix(".woff2").name)
     shutil.copy2(LICENSES / "IBM-Plex-OFL-1.1.txt", public / "licenses")
     shutil.copy2(ROOT / "docs" / "PUBLIC-FONTS.txt", public / "README.txt")
+    (public / "sources.json").write_text(json.dumps(load_lock()["ibm_plex"], indent=2) + "\n")
 
 
 def package_fonts(patched: dict[str, list[Path]], nerd_version: str) -> list[Path]:
@@ -382,14 +403,14 @@ def main() -> None:
     prepared = fetch_and_prepare(lock)
     if args.public:
         package_public(prepared)
-        print("Built 12 OFL text faces as TTF and WOFF2 in dist/public")
+        print(f"Built {sum(map(len, prepared.values()))} OFL text faces as TTF and WOFF2 in dist/public")
         return
     nerd = lock["nerd_fonts"]
     download(nerd["license_url"], LICENSES / f"Nerd-Fonts-{nerd['version']}-LICENSE.txt")
     download(nerd["glyph_licenses_url"], LICENSES / f"Nerd-Fonts-{nerd['version']}-GLYPH-LICENSES.md")
     patched = {kind: run_patcher(kind, paths, nerd) for kind, paths in prepared.items()}
     outputs = package_fonts(patched, nerd["version"])
-    print(f"Built {len(outputs)} readable font files across 3 families and 4 styles")
+    print(f"Built {len(outputs)} private font files across {len(FAMILIES)} families and {len(STYLES)} styles")
 
 
 if __name__ == "__main__":

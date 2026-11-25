@@ -26,9 +26,14 @@ jobs:
       - name: Package the public text edition
         run: |
           mise exec -- python tools/package_public.py
-          sha256sum build/Codex-Fonts.zip
+          python3 -m unittest discover -s site
+          python3 site/build.py
+          cmp build/Codex-Fonts-2.200.zip build/showcase/Codex-typefaces.zip
+          unzip -q build/Codex-Fonts-2.200.zip -d "$RUNNER_TEMP/verify"
+          (cd "$RUNNER_TEMP/verify" && sha256sum --check SHA256SUMS)
+          sha256sum build/Codex-Fonts-2.200.zip
       - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9
         with:
-          path: build/Codex-Fonts.zip
+          path: build/Codex-Fonts-2.200.zip
           archive: false
           if-no-files-found: error

@@ -1,20 +1,17 @@
 """Stage the static showcase using only the unpatched public font build."""
 
 import argparse
+import os
 import shutil
+import sys
 from pathlib import Path
 from tempfile import TemporaryDirectory
-from zipfile import ZIP_DEFLATED, ZipFile, ZipInfo
 
 
 SITE = Path(__file__).resolve().parent
 ROOT = SITE.parent
-STYLES = (
-    ("Regular", 400, "normal"),
-    ("Italic", 400, "italic"),
-    ("Bold", 700, "normal"),
-    ("BoldItalic", 700, "italic"),
-)
+sys.path.insert(0, str(ROOT / "src"))
+from codex_fonts.release import EPOCH, FAMILY_NAMES, STYLES, style_label, write_archive
 
 
 def build(public: Path, output: Path) -> None:
@@ -27,22 +24,22 @@ def build(public: Path, output: Path) -> None:
         (stage / "OFL.txt").write_bytes(notice)
         shutil.copyfile(ROOT / "LICENSE-CODE.txt", stage / "LICENSE-CODE.txt")
         rules = []
-        with ZipFile(stage / "Codex-typefaces.zip", "w") as archive:
-            archive.writestr(ZipInfo("OFL.txt"), notice, compress_type=ZIP_DEFLATED)
-            for family in ("Mono", "Sans", "Serif"):
-                for style, weight, slant in STYLES:
-                    stem = f"Codex{family}-{style}"
-                    web = (public / "web" / f"{stem}.woff2").read_bytes()
-                    ttf = (public / "ttf" / f"{stem}.ttf").read_bytes()
-                    if web[:4] != b"wOF2" or ttf[:4] != b"\x00\x01\x00\x00":
-                        raise ValueError(f"Unexpected font container for {stem} in {public}")
-                    (stage / "fonts" / f"{stem}.woff2").write_bytes(web)
-                    archive.writestr(ZipInfo(f"{stem}.ttf"), ttf, compress_type=ZIP_DEFLATED)
-                    rules.append(
-                        f'@font-face {{ font-family: "Codex {family}"; '
-                        f'src: url("fonts/{stem}.woff2") format("woff2"); '
-                        f'font-style: {slant}; font-weight: {weight}; font-display: swap; }}'
-                    )
+        write_archive(public, stage / "Codex-typefaces.zip", int(os.environ.get("SOURCE_DATE_EPOCH", EPOCH)))
+        for family in FAMILY_NAMES:
+            for style, (weight, slant) in STYLES.items():
+                stem = f"Codex{family}-{style}"
+                shutil.copyfile(public / "web" / f"{stem}.woff2", stage / "fonts" / f"{stem}.woff2")
+                rules.append(
+                    f'@font-face {{ font-family: "Codex {family}"; '
+                    f'src: url("fonts/{stem}.woff2") format("woff2"); '
+                    f'font-style: {slant}; font-weight: {weight}; font-display: swap; }}'
+                )
+        options = "".join(
+            f'<option value="{style}" data-weight="{weight}" data-slant="{slant}">{style_label(style)}</option>'
+            for style, (weight, slant) in STYLES.items()
+        )
+        index = stage / "index.html"
+        index.write_text(index.read_text().replace("<!-- style options -->", options))
         (stage / "fonts.css").write_text("\n".join(rules) + "\n", encoding="utf-8")
         if output.exists():
             shutil.rmtree(output)
