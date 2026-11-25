@@ -15,8 +15,8 @@
   function setFace() {
     const familyName = family.selectedOptions[0].textContent;
     sample.style.fontFamily = 'var(--' + family.value + ')';
-    sample.style.fontWeight = style.value.includes("Bold") ? 700 : 400;
-    sample.style.fontStyle = style.value.includes("Italic") ? "italic" : "normal";
+    sample.style.fontWeight = style.selectedOptions[0].dataset.weight;
+    sample.style.fontStyle = style.selectedOptions[0].dataset.slant;
     document.querySelector("#proof-name").textContent = familyName + " / " + style.selectedOptions[0].textContent;
   }
 
