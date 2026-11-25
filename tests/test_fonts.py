@@ -176,6 +176,9 @@ def test_every_private_cut_keeps_its_full_repertoire_and_real_woff2s():
             master = TTFont(ROOT / "build" / "readable" / "unpatched" / kind / f"Codex{kind.title()}-{style}.ttf")
             assert font["prep"].program.getBytecode().startswith(master["prep"].program.getBytecode())
             assert (font["hhea"].ascent, font["hhea"].descent, font["hhea"].lineGap) == (1025, -275, 0)
+            assert (font["OS/2"].usWinAscent, font["OS/2"].usWinDescent) == {
+                "mono": (1150, 350), "sans": (1150, 282), "serif": (1150, 286),
+            }[kind]
             if kind == "mono":
                 assert all(font["hmtx"][name][0] == 600 for name in cmap.values())
                 _, positions = shape(font_path(kind, style), "q\u0323")

@@ -112,6 +112,15 @@ typo line remains 1025 / −275 / 0 on a 1000-unit em. The public Windows
 clipping pairs remain 1150/350, 1150/275 and 1150/286. Neither a smaller
 line box nor a global transform accounts for the visual differences.
 
+For the **private** icon edition, the old patcher finalizer set clipping
+per file: for example Mono Regular allowed 1119 units above the baseline
+while Bold needed 1150. A legacy engine using those values could change row
+height on a weight switch. The limits now cover the largest *actual patched
+outline* in each six-face family: 1150/350, 1150/282 and 1150/286. This adds
+at most 31 units above or 4 below to a returning face's clipping allowance.
+It doesn't move an outline or change the recommended 1300-unit line. No
+Windows layout engine was available to test the fallback behavior.
+
 ## Reproduce
 
 ```sh

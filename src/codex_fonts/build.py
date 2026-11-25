@@ -112,22 +112,19 @@ def finish_binary(font: TTFont, win_ascent: int, win_descent: int) -> None:
         prep.fromBytecode(original + smart_dropout)
 
 
-def finalize_nerd_binary(font: TTFont) -> None:
-    glyf = font["glyf"]
+def patched_family_bounds(fonts: list[TTFont]) -> tuple[int, int]:
+    """Take common clipping limits from the patched outlines, not FontForge's rounded head."""
     minimum_y = 0
     maximum_y = 0
-    for glyph_name in font.getGlyphOrder():
-        glyph = glyf[glyph_name]
-        if glyph.numberOfContours == 0:
-            continue
-        glyph.recalcBounds(glyf)
-        minimum_y = min(minimum_y, glyph.yMin)
-        maximum_y = max(maximum_y, glyph.yMax)
-    finish_binary(font, maximum_y, -minimum_y)
-
-    font["post"].formatType = 3.0
-    font["post"].extraNames = []
-    font["post"].mapping = {}
+    for font in fonts:
+        glyf = font["glyf"]
+        for glyph_name in font.getGlyphOrder():
+            glyph = glyf[glyph_name]
+            if glyph.numberOfContours:
+                glyph.recalcBounds(glyf)
+                minimum_y = min(minimum_y, glyph.yMin)
+                maximum_y = max(maximum_y, glyph.yMax)
+    return maximum_y, -minimum_y
 
 
 def normalize_names(font: TTFont, family: str, ps_family: str, style: str, *, nerd_version: str | None = None) -> None:
@@ -160,8 +157,6 @@ def normalize_names(font: TTFont, family: str, ps_family: str, style: str, *, ne
     font["head"].fontRevision = float(FONT_VERSION)
     font["head"].created = FIXED_MAC_EPOCH
     font["head"].modified = FIXED_MAC_EPOCH
-    if nerd_version:
-        finalize_nerd_binary(font)
 
 
 def align_mono_x_height(font: TTFont) -> None:
@@ -366,11 +361,16 @@ def package_fonts(patched: dict[str, list[Path]], nerd_version: str) -> list[Pat
         family_dir = DIST / family["slug"]
         fresh_directory(family_dir)
         seen_styles: set[str] = set()
-        for patched_path in paths:
-            font = TTFont(patched_path)
+        fonts = [TTFont(path) for path in paths]
+        win_ascent, win_descent = patched_family_bounds(fonts)
+        for font in fonts:
             style = font_style(font)
             seen_styles.add(style)
             normalize_names(font, family["final_family"], family["final_ps"], style, nerd_version=nerd_version)
+            finish_binary(font, win_ascent, win_descent)
+            font["post"].formatType = 3.0
+            font["post"].extraNames = []
+            font["post"].mapping = {}
             ttf_path = family_dir / f"{family['final_ps']}-{style}.ttf"
             font.save(ttf_path, reorderTables=True)
             outputs.append(ttf_path)
